@@ -17,6 +17,7 @@
 
 // As usual, we'll create constants to name the pins we're using.
 // This will make it easier to follow the code below.
+aREST rest = aREST();
 
 const int sensorPin = 0;
 const int ledPin = 9;
@@ -25,6 +26,7 @@ const int ledPin = 9;
 //and a raw light value
 int lightCal;
 int lightVal;
+bool automatic = true;
 
 
 void setup()
@@ -34,27 +36,53 @@ void setup()
   lightCal = analogRead(sensorPin);
   //we will take a single reading from the light sensor and store it in the lightCal
   //variable. This will give us a prelinary value to compare against in the loop
+  Serial.begin(115200);
+  // Register RGB function
+
+  rest.function("mode", setLight);
+  Serial.println("Try DHCP...");
+  if (Ethernet.begin(macAdd) == 0) {
+    Serial.println("DHCP FAIL...Static IP");
+    Ethernet.begin(macAdd , ip, myDns, myGateway) ;
+  }
+  server.begin();
+  Serial.print("server IP: ");
+  Serial.println(Ethernet.localIP());
+  pixels.begin();
+  Serial.println("Setup complete.\n");
 }
 
+int setLight(String mode) {
+  Serial.println("Mode: " + mode);
+  automatic = false;
+  if (mode == "on") {
+    digitalWrite(9, HIGH);
+  } else {
+    digitalWrite(9, LOW);
+  }
+  // set single pixel color
+  return 1;
+}
 
 void loop()
 {
   //Take a reading using analogRead() on sensor pin and store it in lightVal
   lightVal = analogRead(sensorPin);
-
+  rest.handle(client);
 
   //if lightVal is less than our initial reading (lightCal) minus 50 it is dark and
   //turn pin 9 HIGH. The (-50) part of the statement sets the sensitivity. The smaller
   //the number the more sensitive the circuit will be to variances in light.
-  if (lightVal < lightCal - 50)
-  {
-    digitalWrite(9, HIGH);
-  }
+  if (automatic == true) {
+    if (lightVal < lightCal - 50)
+    {
+      digitalWrite(9, HIGH);
+    }
 
-  //else, it is bright, turn pin 9 LOW
-  else
-  {
-    digitalWrite(9, LOW);
+    //else, it is bright, turn pin 9 LOW
+    else
+    {
+      digitalWrite(9, LOW);
+    }
   }
-
 }
