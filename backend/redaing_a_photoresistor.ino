@@ -26,7 +26,7 @@ const int ledPin = 9;
 //and a raw light value
 int lightCal;
 int lightVal;
-bool automatic = true;
+String mode; // automatic, on, or off
 
 
 void setup()
@@ -52,12 +52,13 @@ void setup()
   Serial.println("Setup complete.\n");
 }
 
-int setLight(String mode) {
+int setLight(String lightMode) {
+  mode = lightMode;
   Serial.println("Mode: " + mode);
-  automatic = false;
+  
   if (mode == "on") {
     digitalWrite(9, HIGH);
-  } else {
+  } else if (mode == "off") {
     digitalWrite(9, LOW);
   }
   // set single pixel color
@@ -73,13 +74,12 @@ void loop()
   //if lightVal is less than our initial reading (lightCal) minus 50 it is dark and
   //turn pin 9 HIGH. The (-50) part of the statement sets the sensitivity. The smaller
   //the number the more sensitive the circuit will be to variances in light.
-  if (automatic == true) {
+  if (mode == "automatic") {
     if (lightVal < lightCal - 50)
     {
       digitalWrite(9, HIGH);
     }
-
-    //else, it is bright, turn pin 9 LOW
+    // else, it is bright, turn pin 9 LOW
     else
     {
       digitalWrite(9, LOW);
